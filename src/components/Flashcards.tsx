@@ -135,8 +135,9 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
         try {
           const result = await onSpeechFeedback(currentWord.word, spoken, feedbackMode);
           setFeedback(result);
-        } catch {
-          setFeedback(`You said: "${spoken}". Unable to get AI feedback.`);
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          setFeedback(`You said: "${spoken}". AI feedback error: ${errorMsg}`);
         }
       };
 

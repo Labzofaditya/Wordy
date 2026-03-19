@@ -125,33 +125,30 @@ export async function getAIFeedbackOpenAI(
        3. Context appropriateness
        Give brief, constructive feedback. Keep response under 75 words.`;
 
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'You are a friendly vocabulary tutor helping users learn new words.' },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 150,
-      }),
-    });
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a friendly vocabulary tutor helping users learn new words.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 150,
+    }),
+  });
 
-    if (!response.ok) {
-      throw new Error('API request failed');
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  } catch (error) {
-    console.error('Failed to get AI feedback:', error);
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.error?.message || `API error ${response.status}`;
+    throw new Error(errorMessage);
   }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
 }
 
 export async function getAIFeedbackGoogle(
@@ -234,10 +231,16 @@ export async function getSpeechFeedback(
   mode: 'pronunciation' | 'sentence',
   settings: UserSettings
 ): Promise<string> {
-  if (settings.ai_feedback_provider === 'openai' && settings.openai_api_key) {
+  if (settings.ai_feedback_provider === 'openai') {
+    if (!settings.openai_api_key) {
+      throw new Error('OpenAI API key not configured. Add it in Settings.');
+    }
     return getAIFeedbackOpenAI(word, spoken, mode, settings.openai_api_key);
-  } else if (settings.ai_feedback_provider === 'google' && settings.google_api_key) {
+  } else if (settings.ai_feedback_provider === 'google') {
+    if (!settings.google_api_key) {
+      throw new Error('Google API key not configured. Add it in Settings.');
+    }
     return getAIFeedbackGoogle(word, spoken, mode, settings.google_api_key);
   }
-  throw new Error('No AI provider configured. Please add an API key in settings.');
+  throw new Error('No AI provider selected. Check Settings.');
 }
