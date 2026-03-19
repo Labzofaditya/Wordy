@@ -94,8 +94,12 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
   const handlePlayPronunciation = async () => {
     if (!currentWord) return;
     setPlayingAudio(true);
+    setFeedback(null);
     try {
       await onPlayPronunciation(currentWord.word);
+    } catch (error) {
+      console.error('Pronunciation error:', error);
+      setFeedback('Could not play pronunciation. Please try again.');
     } finally {
       setPlayingAudio(false);
     }
@@ -104,17 +108,27 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
   const handleStartRecording = async () => {
     if (!currentWord) return;
 
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      setFeedback('Speech recognition is not supported in this browser. Try Chrome or Edge.');
+      return;
+    }
+
     setRecording(true);
     setFeedback(null);
 
+    let hasResult = false;
+
     try {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      const recognition = new SpeechRecognitionAPI();
       recognition.lang = settings?.pronunciation_accent === 'british' ? 'en-GB' :
                          settings?.pronunciation_accent === 'indian' ? 'en-IN' : 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
+      recognition.continuous = false;
 
       recognition.onresult = async (event: SpeechRecognitionEvent) => {
+        hasResult = true;
         const spoken = event.results[0][0].transcript;
         setRecording(false);
 
@@ -122,23 +136,38 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
           const result = await onSpeechFeedback(currentWord.word, spoken, feedbackMode);
           setFeedback(result);
         } catch {
-          setFeedback('Unable to get feedback. Please try again.');
+          setFeedback(`You said: "${spoken}". Unable to get AI feedback.`);
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
         setRecording(false);
-        setFeedback('Could not recognize speech. Please try again.');
+        if (event.error === 'no-speech') {
+          setFeedback('No speech detected. Please try again and speak clearly.');
+        } else if (event.error === 'not-allowed') {
+          setFeedback('Microphone access denied. Please allow microphone access and try again.');
+        } else {
+          setFeedback(`Could not recognize speech (${event.error}). Please try again.`);
+        }
+      };
+
+      recognition.onend = () => {
+        setRecording(false);
+        if (!hasResult) {
+          setFeedback('No speech detected. Click Speak and say the word clearly.');
+        }
       };
 
       recognition.start();
 
       setTimeout(() => {
-        recognition.stop();
-      }, feedbackMode === 'sentence' ? 10000 : 3000);
-    } catch {
+        if (recording) {
+          recognition.stop();
+        }
+      }, feedbackMode === 'sentence' ? 10000 : 5000);
+    } catch (err) {
       setRecording(false);
-      setFeedback('Speech recognition is not supported in this browser.');
+      setFeedback('Speech recognition failed to start. Please try again.');
     }
   };
 
@@ -215,7 +244,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
         <div className="p-6 flex justify-center gap-3">
           <button
             onClick={handlePlayPronunciation}
-            disabled={playingAudio || !settings?.openai_api_key && !settings?.google_api_key}
+            disabled={playingAudio}
             className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50"
           >
             {playingAudio ? (
@@ -229,7 +258,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
           <div className="relative">
             <button
               onClick={handleStartRecording}
-              disabled={recording || !settings?.openai_api_key && !settings?.google_api_key}
+              disabled={recording}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${
                 recording
                   ? 'bg-red-100 text-red-700'
