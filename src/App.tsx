@@ -17,7 +17,10 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   const handleFetchMeaning = useCallback(async (word: string) => {
-    if (!settings?.mw_api_key) return null;
+    if (!settings?.mw_api_key) {
+      console.log('No MW API key in settings:', { hasSettings: !!settings, key: settings?.mw_api_key?.slice(0, 8) });
+      return null;
+    }
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     return fetchMWDefinition(word, settings.mw_api_key, supabaseUrl, supabaseAnonKey);
