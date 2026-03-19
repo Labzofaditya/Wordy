@@ -20,9 +20,8 @@ function AppContent() {
     if (!settings?.mw_api_key) return null;
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const result = await fetchMWDefinition(word, settings.mw_api_key, supabaseUrl, supabaseAnonKey);
-    return result;
-  }, [settings?.mw_api_key]);
+    return fetchMWDefinition(word, settings.mw_api_key, supabaseUrl, supabaseAnonKey);
+  }, [settings]);
 
   const handlePlayPronunciation = useCallback(async (word: string) => {
     if (!settings) return;

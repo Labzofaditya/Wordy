@@ -55,7 +55,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
 
   const handleShowAnswer = async () => {
     setShowAnswer(true);
-    if (currentWord && !currentWord.meaning && settings?.mw_api_key) {
+    if (currentWord && !currentWord.meaning) {
       setLoadingMeaning(true);
       try {
         const result = await onFetchMeaning(currentWord.word);
@@ -65,7 +65,11 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
               ? { ...w, meaning: result.meaning, etymology: result.etymology }
               : w
           ));
+        } else {
+          console.log('No meaning returned for:', currentWord.word, result);
         }
+      } catch (err) {
+        console.error('Failed to fetch meaning:', err);
       } finally {
         setLoadingMeaning(false);
       }
@@ -311,7 +315,9 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
                 <>
                   <h3 className="font-semibold text-slate-900 mb-2">Meaning</h3>
                   <p className="text-slate-700">
-                    {currentWord?.meaning || 'No definition available. Add your Merriam-Webster API key in settings.'}
+                    {currentWord?.meaning || (settings?.mw_api_key
+                      ? 'Could not fetch definition. The word may not be in the dictionary.'
+                      : 'Add your Merriam-Webster API key in Settings to see definitions.')}
                   </p>
                   {currentWord?.etymology && (
                     <>

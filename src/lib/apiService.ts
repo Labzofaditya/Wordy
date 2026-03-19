@@ -21,14 +21,17 @@ export async function fetchMWDefinition(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Merriam-Webster API error:', response.status, errorData);
+      console.error('MW API error:', response.status, errorData);
       return null;
     }
 
     const data = await response.json();
+    if (data.error) {
+      console.warn('MW lookup:', word, data.error, data.suggestions?.slice(0, 3));
+    }
     return { meaning: data.meaning || '', etymology: data.etymology || '' };
   } catch (error) {
-    console.error('Failed to fetch Merriam-Webster definition:', error);
+    console.error('MW fetch failed:', error);
     return null;
   }
 }
