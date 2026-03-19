@@ -55,7 +55,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
 
   const handleShowAnswer = async () => {
     setShowAnswer(true);
-    if (currentWord && !currentWord.meaning && settings?.oed_api_key) {
+    if (currentWord && !currentWord.meaning && settings?.mw_api_key) {
       setLoadingMeaning(true);
       try {
         const result = await onFetchMeaning(currentWord.word);
@@ -281,7 +281,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
                 <>
                   <h3 className="font-semibold text-slate-900 mb-2">Meaning</h3>
                   <p className="text-slate-700">
-                    {currentWord?.meaning || 'No definition available. Add your OED API key in settings.'}
+                    {currentWord?.meaning || 'No definition available. Add your Merriam-Webster API key in settings.'}
                   </p>
                   {currentWord?.etymology && (
                     <>

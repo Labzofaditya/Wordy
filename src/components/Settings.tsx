@@ -8,20 +8,20 @@ export function Settings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [oedApiKey, setOedApiKey] = useState('');
+  const [mwApiKey, setMwApiKey] = useState('');
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [googleApiKey, setGoogleApiKey] = useState('');
   const [pronunciationProvider, setPronunciationProvider] = useState<'openai' | 'google'>('openai');
   const [pronunciationAccent, setPronunciationAccent] = useState<'american' | 'british' | 'indian'>('american');
   const [aiFeedbackProvider, setAiFeedbackProvider] = useState<'openai' | 'google'>('openai');
 
-  const [showOed, setShowOed] = useState(false);
+  const [showMw, setShowMw] = useState(false);
   const [showOpenai, setShowOpenai] = useState(false);
   const [showGoogle, setShowGoogle] = useState(false);
 
   useEffect(() => {
     if (settings) {
-      setOedApiKey(settings.oed_api_key || '');
+      setMwApiKey(settings.mw_api_key || '');
       setOpenaiApiKey(settings.openai_api_key || '');
       setGoogleApiKey(settings.google_api_key || '');
       setPronunciationProvider(settings.pronunciation_provider);
@@ -37,7 +37,7 @@ export function Settings() {
 
     try {
       await updateSettings({
-        oed_api_key: oedApiKey || null,
+        mw_api_key: mwApiKey || null,
         openai_api_key: openaiApiKey || null,
         google_api_key: googleApiKey || null,
         pronunciation_provider: pronunciationProvider,
@@ -83,25 +83,25 @@ export function Settings() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Oxford English Dictionary API Key
+                Merriam-Webster Dictionary API Key
               </label>
               <p className="text-xs text-slate-500 mb-2">
-                Format: app_id:app_key (get from developer.oxforddictionaries.com)
+                Get your free key from dictionaryapi.com
               </p>
               <div className="relative">
                 <input
-                  type={showOed ? 'text' : 'password'}
-                  value={oedApiKey}
-                  onChange={(e) => setOedApiKey(e.target.value)}
+                  type={showMw ? 'text' : 'password'}
+                  value={mwApiKey}
+                  onChange={(e) => setMwApiKey(e.target.value)}
                   className="w-full pr-10 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
-                  placeholder="app_id:app_key"
+                  placeholder="Your API key"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowOed(!showOed)}
+                  onClick={() => setShowMw(!showMw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showOed ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showMw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>

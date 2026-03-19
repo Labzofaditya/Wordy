@@ -1,38 +1,34 @@
 import type { UserSettings } from '../types';
 
-export async function fetchOEDDefinition(
+export async function fetchMWDefinition(
   word: string,
   apiKey: string,
   supabaseUrl: string,
   supabaseAnonKey: string
 ): Promise<{ meaning: string; etymology: string } | null> {
   try {
-    const [app_id, app_key] = apiKey.includes(':')
-      ? apiKey.split(':')
-      : ['', apiKey];
-
     const response = await fetch(
-      `${supabaseUrl}/functions/v1/oed-proxy`,
+      `${supabaseUrl}/functions/v1/mw-proxy`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseAnonKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ word, app_id, app_key }),
+        body: JSON.stringify({ word, api_key: apiKey }),
       }
     );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('OED API error:', response.status, errorData);
+      console.error('Merriam-Webster API error:', response.status, errorData);
       return null;
     }
 
     const data = await response.json();
     return { meaning: data.meaning || '', etymology: data.etymology || '' };
   } catch (error) {
-    console.error('Failed to fetch OED definition:', error);
+    console.error('Failed to fetch Merriam-Webster definition:', error);
     return null;
   }
 }

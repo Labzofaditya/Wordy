@@ -28,7 +28,7 @@ export interface LearningProgress {
 export interface UserSettings {
   id: string;
   user_id: string;
-  oed_api_key: string | null;
+  mw_api_key: string | null;
   openai_api_key: string | null;
   google_api_key: string | null;
   pronunciation_provider: 'openai' | 'google';

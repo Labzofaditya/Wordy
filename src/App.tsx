@@ -8,7 +8,7 @@ import { FileUpload } from './components/FileUpload';
 import { Flashcards } from './components/Flashcards';
 import { Settings } from './components/Settings';
 import { useSettings } from './hooks/useSettings';
-import { fetchOEDDefinition, playPronunciation, getSpeechFeedback } from './lib/apiService';
+import { fetchMWDefinition, playPronunciation, getSpeechFeedback } from './lib/apiService';
 import { Loader2 } from 'lucide-react';
 
 function AppContent() {
@@ -17,12 +17,12 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   const handleFetchMeaning = useCallback(async (word: string) => {
-    if (!settings?.oed_api_key) return null;
+    if (!settings?.mw_api_key) return null;
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const result = await fetchOEDDefinition(word, settings.oed_api_key, supabaseUrl, supabaseAnonKey);
+    const result = await fetchMWDefinition(word, settings.mw_api_key, supabaseUrl, supabaseAnonKey);
     return result;
-  }, [settings?.oed_api_key]);
+  }, [settings?.mw_api_key]);
 
   const handlePlayPronunciation = useCallback(async (word: string) => {
     if (!settings) return;
