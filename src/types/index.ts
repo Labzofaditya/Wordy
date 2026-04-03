@@ -34,6 +34,7 @@ export interface UserSettings {
   pronunciation_provider: 'openai' | 'google';
   pronunciation_accent: 'american' | 'british' | 'indian';
   ai_feedback_provider: 'openai' | 'google';
+  show_book_title: boolean;
   created_at: string;
   updated_at: string;
 }

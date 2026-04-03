@@ -10,6 +10,7 @@ const defaultSettings: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'upd
   pronunciation_provider: 'openai',
   pronunciation_accent: 'american',
   ai_feedback_provider: 'openai',
+  show_book_title: false,
 };
 
 export function useSettings() {

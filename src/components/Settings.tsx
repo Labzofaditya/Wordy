@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Key, Volume2, Brain, Loader2, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Save, Key, Volume2, Brain, Loader2, Check, AlertCircle, Eye, EyeOff, BookOpen } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
 export function Settings() {
@@ -14,6 +14,7 @@ export function Settings() {
   const [pronunciationProvider, setPronunciationProvider] = useState<'openai' | 'google'>('openai');
   const [pronunciationAccent, setPronunciationAccent] = useState<'american' | 'british' | 'indian'>('american');
   const [aiFeedbackProvider, setAiFeedbackProvider] = useState<'openai' | 'google'>('openai');
+  const [showBookTitle, setShowBookTitle] = useState(false);
 
   const [showMw, setShowMw] = useState(false);
   const [showOpenai, setShowOpenai] = useState(false);
@@ -27,6 +28,7 @@ export function Settings() {
       setPronunciationProvider(settings.pronunciation_provider);
       setPronunciationAccent(settings.pronunciation_accent);
       setAiFeedbackProvider(settings.ai_feedback_provider);
+      setShowBookTitle(settings.show_book_title);
     }
   }, [settings]);
 
@@ -43,6 +45,7 @@ export function Settings() {
         pronunciation_provider: pronunciationProvider,
         pronunciation_accent: pronunciationAccent,
         ai_feedback_provider: aiFeedbackProvider,
+        show_book_title: showBookTitle,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -284,6 +287,40 @@ export function Settings() {
               </div>
             </label>
           </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-900">Display</h2>
+              <p className="text-sm text-slate-500">Customize flashcard appearance</p>
+            </div>
+          </div>
+
+          <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+            <div>
+              <span className="text-slate-700 font-medium">Show book title</span>
+              <p className="text-xs text-slate-500 mt-0.5">Display the source book name on flashcards</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showBookTitle}
+              onClick={() => setShowBookTitle(!showBookTitle)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                showBookTitle ? 'bg-teal-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showBookTitle ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </label>
         </div>
       </div>
 

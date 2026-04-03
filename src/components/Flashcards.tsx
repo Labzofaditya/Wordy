@@ -238,7 +238,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
       <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
         <div className="p-8 text-center border-b border-slate-100">
           <h2 className="text-4xl font-bold text-slate-900 mb-2">{currentWord?.word}</h2>
-          {currentWord?.book_title && (
+          {settings?.show_book_title && currentWord?.book_title && (
             <p className="text-sm text-slate-500 flex items-center justify-center gap-1">
               <BookOpen className="h-4 w-4" />
               {currentWord.book_title}
