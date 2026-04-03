@@ -14,11 +14,11 @@ interface MWEntry {
   et?: Array<Array<unknown>>;
 }
 
-function extractDefinition(entry: MWEntry): string {
+function extractDefinitions(entry: MWEntry): string[] {
   if (entry.shortdef && entry.shortdef.length > 0) {
-    return entry.shortdef[0];
+    return entry.shortdef;
   }
-  return "";
+  return [];
 }
 
 function extractEtymology(entry: MWEntry): string {
@@ -93,9 +93,29 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const entry = data[0] as MWEntry;
-    const meaning = extractDefinition(entry);
-    const etymology = extractEtymology(entry);
+    const allMeanings: string[] = [];
+    let etymology = "";
+
+    for (const item of data) {
+      if (typeof item === "object" && item !== null) {
+        const entry = item as MWEntry;
+        const partOfSpeech = entry.fl || "";
+        const definitions = extractDefinitions(entry);
+
+        if (definitions.length > 0) {
+          const prefix = partOfSpeech ? `(${partOfSpeech}) ` : "";
+          definitions.forEach((def, idx) => {
+            allMeanings.push(`${prefix}${idx + 1}. ${def}`);
+          });
+        }
+
+        if (!etymology && entry.et) {
+          etymology = extractEtymology(entry);
+        }
+      }
+    }
+
+    const meaning = allMeanings.join("\n");
 
     return new Response(
       JSON.stringify({ meaning, etymology }),
