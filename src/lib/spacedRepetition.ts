@@ -67,7 +67,7 @@ function retrievability(s: number, elapsedDays: number): number {
 
 function nextInterval(s: number): number {
   const r = FSRS_PARAMS.requestRetention;
-  const interval = (s / 9) * (Math.pow(r, -1) - 1);
+  const interval = 9 * s * (Math.pow(r, -1) - 1);
   return clamp(Math.round(interval), 1, FSRS_PARAMS.maximumInterval);
 }
 
