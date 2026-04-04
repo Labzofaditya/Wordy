@@ -189,17 +189,17 @@ export function FileUpload() {
             <div className="p-4 bg-emerald-50 rounded-lg">
               <p className="text-2xl font-bold text-emerald-600">{stats.masteredCount}</p>
               <p className="text-sm text-slate-600">Mastered</p>
-              <p className="text-xs text-slate-400">High retention</p>
+              <p className="text-xs text-slate-400">5+ reviews, 30d stability</p>
             </div>
             <div className="p-4 bg-amber-50 rounded-lg">
               <p className="text-2xl font-bold text-amber-600">{stats.learningCount}</p>
               <p className="text-sm text-slate-600">Learning</p>
-              <p className="text-xs text-slate-400">Being studied</p>
+              <p className="text-xs text-slate-400">Reviewed 1+ times</p>
             </div>
             <div className="p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">{stats.newCount}</p>
               <p className="text-sm text-slate-600">New</p>
-              <p className="text-xs text-slate-400">Not yet reviewed</p>
+              <p className="text-xs text-slate-400">Never reviewed</p>
             </div>
           </div>
 
