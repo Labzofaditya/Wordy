@@ -147,6 +147,7 @@ export function WordLibrary() {
         >
           <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
           <p className="text-sm text-slate-600">New</p>
+          <p className="text-xs text-slate-400">Not yet reviewed</p>
         </button>
         <button
           onClick={() => setFilterBy('learning')}
@@ -156,6 +157,7 @@ export function WordLibrary() {
         >
           <p className="text-2xl font-bold text-amber-600">{stats.learning}</p>
           <p className="text-sm text-slate-600">Learning</p>
+          <p className="text-xs text-slate-400">Being studied</p>
         </button>
         <button
           onClick={() => setFilterBy('mastered')}
@@ -165,6 +167,7 @@ export function WordLibrary() {
         >
           <p className="text-2xl font-bold text-emerald-600">{stats.mastered}</p>
           <p className="text-sm text-slate-600">Mastered</p>
+          <p className="text-xs text-slate-400">High retention</p>
         </button>
       </div>
 

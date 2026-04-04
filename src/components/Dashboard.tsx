@@ -52,7 +52,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
               <Trophy className="h-5 w-5 text-emerald-600" />
             </div>
-            <span className="text-sm text-slate-600">Mastered</span>
+            <div>
+              <span className="text-sm text-slate-600">Mastered</span>
+              <p className="text-xs text-slate-400">High retention achieved</p>
+            </div>
           </div>
           <p className="text-3xl font-bold text-emerald-600">{stats?.mastered || 0}</p>
         </div>
@@ -62,7 +65,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
               <Target className="h-5 w-5 text-amber-600" />
             </div>
-            <span className="text-sm text-slate-600">Due for Review</span>
+            <div>
+              <span className="text-sm text-slate-600">Due for Review</span>
+              <p className="text-xs text-slate-400">Scheduled for today</p>
+            </div>
           </div>
           <p className="text-3xl font-bold text-amber-600">{stats?.dueForReview || 0}</p>
         </div>
@@ -72,7 +78,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
-            <span className="text-sm text-slate-600">Progress</span>
+            <div>
+              <span className="text-sm text-slate-600">Progress</span>
+              <p className="text-xs text-slate-400">Mastery percentage</p>
+            </div>
           </div>
           <p className="text-3xl font-bold text-blue-600">{progressPercent}%</p>
         </div>
@@ -123,6 +132,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">New</p>
+                <p className="text-xs text-slate-400">Not yet reviewed</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -131,6 +141,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">Learning</p>
+                <p className="text-xs text-slate-400">Being studied</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -139,6 +150,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">Mastered</p>
+                <p className="text-xs text-slate-400">High retention</p>
               </div>
             </div>
           </div>
