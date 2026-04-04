@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthForm } from './components/AuthForm';
 import { Layout } from './components/Layout';
@@ -8,13 +8,14 @@ import { FileUpload } from './components/FileUpload';
 import { Flashcards } from './components/Flashcards';
 import { Settings } from './components/Settings';
 import { useSettings } from './hooks/useSettings';
+import { useRouter } from './hooks/useRouter';
 import { fetchMWDefinition, playPronunciation, getSpeechFeedback } from './lib/apiService';
 import { Loader2 } from 'lucide-react';
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
   const { settings } = useSettings();
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const { currentPage, navigate } = useRouter();
 
   const handleFetchMeaning = useCallback(async (word: string) => {
     if (!settings?.mw_api_key) {
@@ -55,7 +56,7 @@ function AppContent() {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentPage} />;
+        return <Dashboard onNavigate={navigate} />;
       case 'library':
         return <WordLibrary />;
       case 'upload':
@@ -71,12 +72,12 @@ function AppContent() {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard onNavigate={setCurrentPage} />;
+        return <Dashboard onNavigate={navigate} />;
     }
   };
 
   return (
-    <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+    <Layout currentPage={currentPage} onNavigate={navigate}>
       {renderPage()}
     </Layout>
   );
