@@ -17,7 +17,7 @@ interface DashboardProps {
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { getStats } = useLearning();
   const { words } = useWords();
-  const [stats, setStats] = useState<{ total: number; mastered: number; dueForReview: number } | null>(null);
+  const [stats, setStats] = useState<{ total: number; mastered: number; inProgress: number; newWords: number; dueForReview: number } | null>(null);
 
   useEffect(() => {
     getStats().then(setStats);
@@ -36,7 +36,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <p className="text-slate-600 mt-1">Track your vocabulary learning progress</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
@@ -45,6 +45,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <span className="text-sm text-slate-600">Total Words</span>
           </div>
           <p className="text-3xl font-bold text-slate-900">{stats?.total || 0}</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Flame className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <span className="text-sm text-slate-600">In Progress</span>
+              <p className="text-xs text-slate-400">Reviewed, not mastered</p>
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-orange-600">{stats?.inProgress || 0}</p>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -128,7 +141,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <span className="text-lg font-bold text-blue-600">
-                    {(stats?.total || 0) - (stats?.mastered || 0) - (stats?.dueForReview || 0)}
+                    {stats?.newWords || 0}
                   </span>
                 </div>
                 <p className="text-xs text-slate-600">New</p>
@@ -137,11 +150,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <div className="text-center">
                 <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <span className="text-lg font-bold text-amber-600">
-                    {stats?.dueForReview || 0}
+                    {stats?.inProgress || 0}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600">Learning</p>
-                <p className="text-xs text-slate-400">Reviewed 1+ times</p>
+                <p className="text-xs text-slate-600">In Progress</p>
+                <p className="text-xs text-slate-400">Reviewed, not mastered</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">

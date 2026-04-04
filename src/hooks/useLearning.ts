@@ -176,13 +176,16 @@ export function useLearning() {
 
     const total = totalCount || 0;
     const mastered = masteredCount || 0;
-    const inProgress = inProgressCount || 0;
+    const hasProgress = inProgressCount || 0;
     const due = dueCount || 0;
-    const newWords = total - inProgress;
+    const newWords = total - hasProgress;
+    const inProgress = hasProgress - mastered;
 
     return {
       total,
       mastered,
+      inProgress,
+      newWords,
       dueForReview: due + newWords,
     };
   };
