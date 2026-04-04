@@ -143,29 +143,40 @@ export function useLearning() {
   const getStats = async () => {
     if (!user) return null;
 
-    const { data: total } = await supabase
+    const { count: totalCount } = await supabase
       .from('words')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    const { data: mastered } = await supabase
+    const { count: masteredCount } = await supabase
       .from('learning_progress')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('mastered', true);
 
     const now = new Date().toISOString();
-    const { data: dueForReview } = await supabase
+    const { count: dueCount } = await supabase
       .from('learning_progress')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .lte('next_review', now)
       .eq('mastered', false);
 
+    const { count: inProgressCount } = await supabase
+      .from('learning_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    const total = totalCount || 0;
+    const mastered = masteredCount || 0;
+    const inProgress = inProgressCount || 0;
+    const due = dueCount || 0;
+    const newWords = total - inProgress;
+
     return {
-      total: total?.length || 0,
-      mastered: mastered?.length || 0,
-      dueForReview: dueForReview?.length || 0,
+      total,
+      mastered,
+      dueForReview: due + newWords,
     };
   };
 
