@@ -11,13 +11,17 @@ export interface Word {
   updated_at: string;
 }
 
+export type FSRSState = 'new' | 'learning' | 'review' | 'relearning';
+
 export interface LearningProgress {
   id: string;
   user_id: string;
   word_id: string;
-  ease_factor: number;
-  interval: number;
-  repetitions: number;
+  stability: number;
+  difficulty: number;
+  state: FSRSState;
+  reps: number;
+  lapses: number;
   next_review: string;
   last_reviewed: string | null;
   mastered: boolean;
@@ -62,4 +66,4 @@ export interface VocabStats {
   newCount: number;
 }
 
-export type ReviewQuality = 0 | 1 | 2 | 3 | 4 | 5;
+export type FSRSRating = 1 | 2 | 3 | 4;

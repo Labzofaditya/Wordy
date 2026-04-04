@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { calculateSM2 } from '../lib/spacedRepetition';
-import type { WordWithProgress, ReviewQuality } from '../types';
+import { calculateFSRS, type FSRSCard } from '../lib/spacedRepetition';
+import type { WordWithProgress, FSRSRating, FSRSState } from '../types';
 
 export function useLearning() {
   const { user } = useAuth();
@@ -90,7 +90,7 @@ export function useLearning() {
     [user]
   );
 
-  const recordReview = async (wordId: string, quality: ReviewQuality) => {
+  const recordReview = async (wordId: string, rating: FSRSRating) => {
     if (!user) throw new Error('Not authenticated');
 
     setReviewing(true);
@@ -102,19 +102,26 @@ export function useLearning() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const currentEase = existingProgress?.ease_factor || 2.5;
-      const currentInterval = existingProgress?.interval || 0;
-      const currentReps = existingProgress?.repetitions || 0;
+      const card: FSRSCard = {
+        stability: existingProgress?.stability || 1.0,
+        difficulty: existingProgress?.difficulty || 5.0,
+        state: (existingProgress?.state as FSRSState) || 'new',
+        reps: existingProgress?.reps || 0,
+        lapses: existingProgress?.lapses || 0,
+        lastReview: existingProgress?.last_reviewed ? new Date(existingProgress.last_reviewed) : null,
+      };
 
-      const result = calculateSM2(quality, currentEase, currentInterval, currentReps);
-      const mastered = result.repetitions >= 5 && result.easeFactor >= 2.5;
+      const result = calculateFSRS(rating, card);
+      const mastered = result.state === 'review' && result.reps >= 5 && result.stability >= 30;
 
       const progressData = {
         user_id: user.id,
         word_id: wordId,
-        ease_factor: result.easeFactor,
-        interval: result.interval,
-        repetitions: result.repetitions,
+        stability: result.stability,
+        difficulty: result.difficulty,
+        state: result.state,
+        reps: result.reps,
+        lapses: result.lapses,
         next_review: result.nextReview.toISOString(),
         last_reviewed: new Date().toISOString(),
         mastered,

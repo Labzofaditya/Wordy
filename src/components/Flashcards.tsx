@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Volume2,
   Mic,
@@ -12,8 +12,8 @@ import {
 import { useLearning } from '../hooks/useLearning';
 import { useSettings } from '../hooks/useSettings';
 import { useWords } from '../hooks/useWords';
-import type { WordWithProgress, ReviewQuality } from '../types';
-import { getQualityLabel, getQualityColor } from '../lib/spacedRepetition';
+import type { WordWithProgress, FSRSRating, FSRSState } from '../types';
+import { getRatingLabel, getRatingColor, getNextIntervalPreview, type FSRSCard } from '../lib/spacedRepetition';
 
 interface FlashcardProps {
   onFetchMeaning: (word: string) => Promise<{ meaning: string; etymology: string } | null>;
@@ -88,14 +88,14 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
     }
   };
 
-  const handleRate = async (quality: ReviewQuality) => {
+  const handleRate = async (rating: FSRSRating) => {
     if (!currentWord) return;
 
-    await recordReview(currentWord.id, quality);
+    await recordReview(currentWord.id, rating);
 
     setSessionStats((prev) => ({
       reviewed: prev.reviewed + 1,
-      correct: quality >= 3 ? prev.correct + 1 : prev.correct,
+      correct: rating >= 3 ? prev.correct + 1 : prev.correct,
     }));
 
     if (currentIndex < words.length - 1) {
@@ -106,6 +106,18 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
       setSessionComplete(true);
     }
   };
+
+  const currentCard: FSRSCard = useMemo(() => {
+    const progress = currentWord?.progress;
+    return {
+      stability: progress?.stability || 1.0,
+      difficulty: progress?.difficulty || 5.0,
+      state: (progress?.state as FSRSState) || 'new',
+      reps: progress?.reps || 0,
+      lapses: progress?.lapses || 0,
+      lastReview: progress?.last_reviewed ? new Date(progress.last_reviewed) : null,
+    };
+  }, [currentWord]);
 
   const handlePlayPronunciation = async () => {
     if (!currentWord) return;
@@ -389,24 +401,18 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
 
             <div>
               <p className="text-sm text-slate-600 mb-3 text-center">How well did you know this?</p>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {([0, 1, 2, 3, 4, 5] as ReviewQuality[]).map((q) => (
+              <div className="grid grid-cols-4 gap-2">
+                {([1, 2, 3, 4] as FSRSRating[]).map((rating) => (
                   <button
-                    key={q}
-                    onClick={() => handleRate(q)}
+                    key={rating}
+                    onClick={() => handleRate(rating)}
                     disabled={reviewing}
-                    className={`py-3 px-2 rounded-lg text-white font-medium transition-all hover:scale-105 disabled:opacity-50 ${getQualityColor(
-                      q
-                    )}`}
-                    title={getQualityLabel(q)}
+                    className={`py-3 px-2 rounded-lg text-white font-medium transition-all hover:scale-105 disabled:opacity-50 ${getRatingColor(rating)}`}
                   >
-                    {q}
+                    <div className="text-sm">{getRatingLabel(rating)}</div>
+                    <div className="text-xs opacity-80 mt-0.5">{getNextIntervalPreview(rating, currentCard)}</div>
                   </button>
                 ))}
-              </div>
-              <div className="flex justify-between text-xs text-slate-500 mt-2 px-1">
-                <span>Complete blackout</span>
-                <span>Perfect</span>
               </div>
             </div>
           </div>
