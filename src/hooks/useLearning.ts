@@ -9,10 +9,21 @@ export function useLearning() {
   const [reviewing, setReviewing] = useState(false);
 
   const getWordsForReview = useCallback(
-    async (limit: number = 20): Promise<WordWithProgress[]> => {
+    async (limit: number = 20, bookTitle?: string): Promise<WordWithProgress[]> => {
       if (!user) return [];
 
       const now = new Date().toISOString();
+
+      let wordIdsInBook: Set<string> | null = null;
+      if (bookTitle) {
+        const { data: bookWords } = await supabase
+          .from('words')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('book_title', bookTitle);
+        wordIdsInBook = new Set(bookWords?.map((w) => w.id) || []);
+        if (wordIdsInBook.size === 0) return [];
+      }
 
       const { data: progressData } = await supabase
         .from('learning_progress')
@@ -20,9 +31,13 @@ export function useLearning() {
         .eq('user_id', user.id)
         .lte('next_review', now)
         .eq('mastered', false)
-        .limit(limit);
+        .limit(limit * 2);
 
-      const reviewWordIds = progressData?.map((p) => p.word_id) || [];
+      let reviewWordIds = progressData?.map((p) => p.word_id) || [];
+      if (wordIdsInBook) {
+        reviewWordIds = reviewWordIds.filter((id) => wordIdsInBook!.has(id));
+      }
+      reviewWordIds = reviewWordIds.slice(0, limit);
 
       const { data: allProgressWordIds } = await supabase
         .from('learning_progress')
@@ -31,11 +46,17 @@ export function useLearning() {
 
       const progressWordIdSet = new Set(allProgressWordIds?.map((p) => p.word_id) || []);
 
-      const { data: allUserWords } = await supabase
+      let wordsQuery = supabase
         .from('words')
         .select('id')
         .eq('user_id', user.id)
         .limit(1000);
+
+      if (bookTitle) {
+        wordsQuery = wordsQuery.eq('book_title', bookTitle);
+      }
+
+      const { data: allUserWords } = await wordsQuery;
 
       const newWordIds = (allUserWords || [])
         .filter((w) => !progressWordIdSet.has(w.id))

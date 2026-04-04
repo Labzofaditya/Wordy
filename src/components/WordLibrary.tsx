@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Trash2, BookOpen, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { Search, Trash2, BookOpen, CheckCircle2, Clock, Sparkles, Pencil, Check, X } from 'lucide-react';
 import { useWords } from '../hooks/useWords';
 import type { WordWithProgress } from '../types';
 
@@ -7,11 +7,14 @@ type SortOption = 'newest' | 'oldest' | 'alphabetical' | 'progress';
 type FilterOption = 'all' | 'new' | 'learning' | 'mastered';
 
 export function WordLibrary() {
-  const { words, loading, deleteWord } = useWords();
+  const { words, loading, deleteWord, updateWordSpelling } = useWords();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const filteredWords = useMemo(() => {
     let result = [...words];
@@ -60,6 +63,30 @@ export function WordLibrary() {
       await deleteWord(wordId);
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleStartEdit = (word: WordWithProgress) => {
+    setEditingId(word.id);
+    setEditValue(word.word);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleSaveEdit = async (wordId: string) => {
+    if (!editValue.trim()) return;
+    setSaving(true);
+    try {
+      await updateWordSpelling(wordId, editValue);
+      setEditingId(null);
+      setEditValue('');
+    } catch (err) {
+      console.error('Failed to update word:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -186,8 +213,48 @@ export function WordLibrary() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h3 className="font-semibold text-slate-900 text-lg">{word.word}</h3>
-                    {getStatusBadge(word)}
+                    {editingId === word.id ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit(word.id);
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                          className="flex-1 px-3 py-1.5 border border-teal-500 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none text-lg font-semibold"
+                          autoFocus
+                          disabled={saving}
+                        />
+                        <button
+                          onClick={() => handleSaveEdit(word.id)}
+                          disabled={saving || !editValue.trim()}
+                          className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <Check className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={saving}
+                          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="font-semibold text-slate-900 text-lg">{word.word}</h3>
+                        <button
+                          onClick={() => handleStartEdit(word)}
+                          className="p-1 text-slate-400 hover:text-teal-600 rounded transition-colors"
+                          title="Edit spelling"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        {getStatusBadge(word)}
+                      </>
+                    )}
                   </div>
                   {word.meaning && (
                     <p className="text-slate-600 text-sm line-clamp-2 mb-2">{word.meaning}</p>
@@ -208,7 +275,7 @@ export function WordLibrary() {
                 </div>
                 <button
                   onClick={() => handleDelete(word.id)}
-                  disabled={deleting === word.id}
+                  disabled={deleting === word.id || editingId === word.id}
                   className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                 >
                   <Trash2 className="h-5 w-5" />

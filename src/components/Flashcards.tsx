@@ -7,9 +7,11 @@ import {
   BookOpen,
   Brain,
   Trophy,
+  Filter,
 } from 'lucide-react';
 import { useLearning } from '../hooks/useLearning';
 import { useSettings } from '../hooks/useSettings';
+import { useWords } from '../hooks/useWords';
 import type { WordWithProgress, ReviewQuality } from '../types';
 import { getQualityLabel, getQualityColor } from '../lib/spacedRepetition';
 
@@ -22,6 +24,7 @@ interface FlashcardProps {
 export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedback }: FlashcardProps) {
   const { getWordsForReview, recordReview, reviewing } = useLearning();
   const { settings } = useSettings();
+  const { getUniqueBooks, loading: wordsLoading } = useWords();
   const [words, setWords] = useState<WordWithProgress[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -33,23 +36,32 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
   const [feedbackMode, setFeedbackMode] = useState<'pronunciation' | 'sentence'>('pronunciation');
   const [sessionComplete, setSessionComplete] = useState(false);
   const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
+  const [selectedBook, setSelectedBook] = useState<string>('');
+  const [books, setBooks] = useState<string[]>([]);
 
-  const loadWords = useCallback(async () => {
+  useEffect(() => {
+    if (!wordsLoading) {
+      setBooks(getUniqueBooks());
+    }
+  }, [wordsLoading, getUniqueBooks]);
+
+  const loadWords = useCallback(async (bookTitle?: string) => {
     setLoading(true);
     try {
-      const reviewWords = await getWordsForReview(20);
+      const reviewWords = await getWordsForReview(20, bookTitle || undefined);
       setWords(reviewWords);
       setCurrentIndex(0);
       setShowAnswer(false);
       setSessionComplete(reviewWords.length === 0);
+      setSessionStats({ reviewed: 0, correct: 0 });
     } finally {
       setLoading(false);
     }
   }, [getWordsForReview]);
 
   useEffect(() => {
-    loadWords();
-  }, [loadWords]);
+    loadWords(selectedBook || undefined);
+  }, [selectedBook]);
 
   const currentWord = words[currentIndex];
 
@@ -193,11 +205,18 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
         <h2 className="text-2xl font-bold text-slate-900 mb-2">
           {words.length === 0 ? 'No Words to Review' : 'Session Complete!'}
         </h2>
-        <p className="text-slate-600 mb-6">
+        <p className="text-slate-600 mb-4">
           {words.length === 0
-            ? 'Import some words or check back later when words are due for review.'
+            ? selectedBook
+              ? `No words from "${selectedBook}" are due for review.`
+              : 'Import some words or check back later when words are due for review.'
             : `You reviewed ${sessionStats.reviewed} words with ${sessionStats.correct} correct answers.`}
         </p>
+        {selectedBook && (
+          <p className="text-sm text-slate-500 mb-4">
+            Reviewing: {selectedBook}
+          </p>
+        )}
         {sessionStats.reviewed > 0 && (
           <div className="bg-slate-50 rounded-xl p-4 mb-6">
             <div className="text-4xl font-bold text-teal-600">
@@ -206,26 +225,59 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
             <p className="text-slate-600 text-sm">Accuracy</p>
           </div>
         )}
-        <button
-          onClick={loadWords}
-          className="px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
-        >
-          Start New Session
-        </button>
+        <div className="flex flex-col gap-3 items-center">
+          {books.length > 0 && (
+            <select
+              value={selectedBook}
+              onChange={(e) => handleBookChange(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            >
+              <option value="">All Books</option>
+              {books.map((book) => (
+                <option key={book} value={book}>{book}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => loadWords(selectedBook || undefined)}
+            className="px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            Start New Session
+          </button>
+        </div>
       </div>
     );
   }
 
+  const handleBookChange = (book: string) => {
+    setSelectedBook(book);
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Practice</h1>
           <p className="text-slate-600">
             Card {currentIndex + 1} of {words.length}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {books.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-slate-500" />
+              <select
+                value={selectedBook}
+                onChange={(e) => handleBookChange(e.target.value)}
+                className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none max-w-[200px]"
+              >
+                <option value="">All Books</option>
+                {books.map((book) => (
+                  <option key={book} value={book}>{book}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="h-2 w-32 bg-slate-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-teal-600 transition-all"

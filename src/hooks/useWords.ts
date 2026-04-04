@@ -156,6 +156,33 @@ export function useWords() {
     setWords((prev) => prev.filter((w) => w.id !== wordId));
   };
 
+  const updateWordSpelling = async (wordId: string, newSpelling: string) => {
+    if (!user) throw new Error('Not authenticated');
+
+    const trimmed = newSpelling.trim();
+    if (!trimmed) throw new Error('Word cannot be empty');
+
+    const { error } = await supabase
+      .from('words')
+      .update({ word: trimmed, meaning: null, etymology: null, updated_at: new Date().toISOString() })
+      .eq('id', wordId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    setWords((prev) =>
+      prev.map((w) => (w.id === wordId ? { ...w, word: trimmed, meaning: null, etymology: null } : w))
+    );
+  };
+
+  const getUniqueBooks = () => {
+    const books = new Set<string>();
+    for (const w of words) {
+      if (w.book_title) books.add(w.book_title);
+    }
+    return Array.from(books).sort();
+  };
+
   return {
     words,
     loading,
@@ -164,5 +191,7 @@ export function useWords() {
     importWords,
     updateWordMeaning,
     deleteWord,
+    updateWordSpelling,
+    getUniqueBooks,
   };
 }
