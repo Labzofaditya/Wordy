@@ -12,13 +12,33 @@ function getRouteFromPath(pathname: string): Route {
 }
 
 export function useRouter() {
-  const [currentPage, setCurrentPage] = useState<Route>(() =>
-    getRouteFromPath(window.location.pathname)
-  );
+  const [currentPage, setCurrentPage] = useState<Route>(() => {
+    const route = getRouteFromPath(window.location.pathname);
+    const currentPath = window.location.pathname;
+    const isRoot = currentPath === '/';
+    const isKnownRoute = currentPath === '/' || ROUTES.some(r => currentPath === `/${r}`);
+
+    if (!isRoot && !isKnownRoute) {
+      window.history.replaceState(null, '', '/');
+      return 'dashboard';
+    }
+
+    return route;
+  });
 
   useEffect(() => {
     const handlePopState = () => {
-      setCurrentPage(getRouteFromPath(window.location.pathname));
+      const route = getRouteFromPath(window.location.pathname);
+      const currentPath = window.location.pathname;
+      const isRoot = currentPath === '/';
+      const isKnownRoute = currentPath === '/' || ROUTES.some(r => currentPath === `/${r}`);
+
+      if (!isRoot && !isKnownRoute) {
+        window.history.replaceState(null, '', '/');
+        setCurrentPage('dashboard');
+      } else {
+        setCurrentPage(route);
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
