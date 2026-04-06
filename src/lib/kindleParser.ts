@@ -20,6 +20,24 @@ export async function parseKindleVocabDb(file: File): Promise<KindleWord[]> {
   const words: KindleWord[] = [];
 
   try {
+    const tablesResult = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+
+    if (tablesResult.length === 0) {
+      throw new Error('Invalid database file');
+    }
+
+    const tables = tablesResult[0].values.map(row => String(row[0]));
+    const requiredTables = ['WORDS', 'LOOKUPS', 'BOOK_INFO'];
+    const missingTables = requiredTables.filter(table => !tables.includes(table));
+
+    if (missingTables.length > 0) {
+      throw new Error(
+        "This doesn't appear to be a Kindle vocabulary file. Expected tables WORDS, LOOKUPS, " +
+        "and BOOK_INFO were not found. Please upload the vocab.db file from your Kindle " +
+        "(usually found at /system/vocabulary/vocab.db)."
+      );
+    }
+
     const result = db.exec(`
       SELECT
         w.word,
