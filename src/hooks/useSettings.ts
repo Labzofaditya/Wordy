@@ -4,12 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { UserSettings } from '../types';
 
 const defaultSettings: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  mw_api_key: null,
-  openai_api_key: null,
-  google_api_key: null,
-  pronunciation_provider: 'openai',
   pronunciation_accent: 'american',
-  ai_feedback_provider: 'openai',
   show_book_title: false,
 };
 

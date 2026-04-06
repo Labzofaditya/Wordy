@@ -32,12 +32,7 @@ export interface LearningProgress {
 export interface UserSettings {
   id: string;
   user_id: string;
-  mw_api_key: string | null;
-  openai_api_key: string | null;
-  google_api_key: string | null;
-  pronunciation_provider: 'openai' | 'google';
   pronunciation_accent: 'american' | 'british' | 'indian';
-  ai_feedback_provider: 'openai' | 'google';
   show_book_title: boolean;
   created_at: string;
   updated_at: string;

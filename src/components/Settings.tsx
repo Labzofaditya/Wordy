@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Key, Volume2, Brain, Loader2, Check, AlertCircle, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { Save, Volume2, Loader2, Check, AlertCircle, BookOpen } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
 export function Settings() {
@@ -8,26 +8,12 @@ export function Settings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [mwApiKey, setMwApiKey] = useState('');
-  const [openaiApiKey, setOpenaiApiKey] = useState('');
-  const [googleApiKey, setGoogleApiKey] = useState('');
-  const [pronunciationProvider, setPronunciationProvider] = useState<'openai' | 'google'>('openai');
   const [pronunciationAccent, setPronunciationAccent] = useState<'american' | 'british' | 'indian'>('american');
-  const [aiFeedbackProvider, setAiFeedbackProvider] = useState<'openai' | 'google'>('openai');
   const [showBookTitle, setShowBookTitle] = useState(false);
-
-  const [showMw, setShowMw] = useState(false);
-  const [showOpenai, setShowOpenai] = useState(false);
-  const [showGoogle, setShowGoogle] = useState(false);
 
   useEffect(() => {
     if (settings) {
-      setMwApiKey(settings.mw_api_key || '');
-      setOpenaiApiKey(settings.openai_api_key || '');
-      setGoogleApiKey(settings.google_api_key || '');
-      setPronunciationProvider(settings.pronunciation_provider);
       setPronunciationAccent(settings.pronunciation_accent);
-      setAiFeedbackProvider(settings.ai_feedback_provider);
       setShowBookTitle(settings.show_book_title);
     }
   }, [settings]);
@@ -39,12 +25,7 @@ export function Settings() {
 
     try {
       await updateSettings({
-        mw_api_key: mwApiKey || null,
-        openai_api_key: openaiApiKey || null,
-        google_api_key: googleApiKey || null,
-        pronunciation_provider: pronunciationProvider,
         pronunciation_accent: pronunciationAccent,
-        ai_feedback_provider: aiFeedbackProvider,
         show_book_title: showBookTitle,
       });
       setSaved(true);
@@ -68,99 +49,10 @@ export function Settings() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-600 mt-1">Configure your API keys and preferences</p>
+        <p className="text-slate-600 mt-1">Configure your learning preferences</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Key className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-900">API Keys</h2>
-              <p className="text-sm text-slate-500">Connect external services for definitions and audio</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Merriam-Webster Dictionary API Key
-              </label>
-              <p className="text-xs text-slate-500 mb-2">
-                Get your free key from dictionaryapi.com
-              </p>
-              <div className="relative">
-                <input
-                  type={showMw ? 'text' : 'password'}
-                  value={mwApiKey}
-                  onChange={(e) => setMwApiKey(e.target.value)}
-                  className="w-full pr-10 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
-                  placeholder="Your API key"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowMw(!showMw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showMw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                OpenAI API Key
-              </label>
-              <p className="text-xs text-slate-500 mb-2">
-                For text-to-speech and AI feedback (platform.openai.com)
-              </p>
-              <div className="relative">
-                <input
-                  type={showOpenai ? 'text' : 'password'}
-                  value={openaiApiKey}
-                  onChange={(e) => setOpenaiApiKey(e.target.value)}
-                  className="w-full pr-10 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
-                  placeholder="sk-..."
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowOpenai(!showOpenai)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showOpenai ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Google Cloud API Key
-              </label>
-              <p className="text-xs text-slate-500 mb-2">
-                For text-to-speech and Gemini AI (console.cloud.google.com)
-              </p>
-              <div className="relative">
-                <input
-                  type={showGoogle ? 'text' : 'password'}
-                  value={googleApiKey}
-                  onChange={(e) => setGoogleApiKey(e.target.value)}
-                  className="w-full pr-10 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
-                  placeholder="AIza..."
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowGoogle(!showGoogle)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showGoogle ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
@@ -168,124 +60,49 @@ export function Settings() {
             </div>
             <div>
               <h2 className="font-semibold text-slate-900">Pronunciation</h2>
-              <p className="text-sm text-slate-500">Choose your preferred voice settings</p>
+              <p className="text-sm text-slate-500">Choose your preferred accent</p>
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Voice Provider
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="pronunciation_provider"
-                    value="openai"
-                    checked={pronunciationProvider === 'openai'}
-                    onChange={() => setPronunciationProvider('openai')}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">OpenAI</span>
-                </label>
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="pronunciation_provider"
-                    value="google"
-                    checked={pronunciationProvider === 'google'}
-                    onChange={() => setPronunciationProvider('google')}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">Google</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Accent
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="accent"
-                    value="american"
-                    checked={pronunciationAccent === 'american'}
-                    onChange={() => setPronunciationAccent('american')}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">American</span>
-                </label>
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="accent"
-                    value="british"
-                    checked={pronunciationAccent === 'british'}
-                    onChange={() => setPronunciationAccent('british')}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">British</span>
-                </label>
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="accent"
-                    value="indian"
-                    checked={pronunciationAccent === 'indian'}
-                    onChange={() => setPronunciationAccent('indian')}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                  />
-                  <span className="text-slate-700">Indian</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Brain className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-900">AI Feedback</h2>
-              <p className="text-sm text-slate-500">Choose AI provider for speech feedback</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-              <input
-                type="radio"
-                name="ai_provider"
-                value="openai"
-                checked={aiFeedbackProvider === 'openai'}
-                onChange={() => setAiFeedbackProvider('openai')}
-                className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-              />
-              <div>
-                <span className="text-slate-700 font-medium">OpenAI (GPT-4o-mini)</span>
-                <p className="text-xs text-slate-500">Fast and accurate feedback</p>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Accent
             </label>
-            <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-              <input
-                type="radio"
-                name="ai_provider"
-                value="google"
-                checked={aiFeedbackProvider === 'google'}
-                onChange={() => setAiFeedbackProvider('google')}
-                className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-              />
-              <div>
-                <span className="text-slate-700 font-medium">Google (Gemini)</span>
-                <p className="text-xs text-slate-500">Alternative AI provider</p>
-              </div>
-            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <input
+                  type="radio"
+                  name="accent"
+                  value="american"
+                  checked={pronunciationAccent === 'american'}
+                  onChange={() => setPronunciationAccent('american')}
+                  className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                />
+                <span className="text-slate-700">American</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <input
+                  type="radio"
+                  name="accent"
+                  value="british"
+                  checked={pronunciationAccent === 'british'}
+                  onChange={() => setPronunciationAccent('british')}
+                  className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                />
+                <span className="text-slate-700">British</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <input
+                  type="radio"
+                  name="accent"
+                  value="indian"
+                  checked={pronunciationAccent === 'indian'}
+                  onChange={() => setPronunciationAccent('indian')}
+                  className="w-4 h-4 text-teal-600 focus:ring-teal-500"
+                />
+                <span className="text-slate-700">Indian</span>
+              </label>
+            </div>
           </div>
         </div>
 
