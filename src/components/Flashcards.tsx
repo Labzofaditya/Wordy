@@ -91,7 +91,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
   const handleRate = async (rating: FSRSRating) => {
     if (!currentWord) return;
 
-    await recordReview(currentWord.id, rating);
+    await recordReview(currentWord.id, rating, currentWord.progress);
 
     setSessionStats((prev) => ({
       reviewed: prev.reviewed + 1,

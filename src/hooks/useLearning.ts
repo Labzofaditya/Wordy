@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { calculateFSRS, type FSRSCard } from '../lib/spacedRepetition';
+import { getReviewWords, saveReviewResult, getLearningStats } from '../services/learningService';
 import type { WordWithProgress, FSRSRating, FSRSState } from '../types';
 
 export function useLearning() {
@@ -11,90 +11,28 @@ export function useLearning() {
   const getWordsForReview = useCallback(
     async (limit: number = 20, bookTitle?: string): Promise<WordWithProgress[]> => {
       if (!user) return [];
-
-      const { data, error } = await supabase.rpc('get_review_words', {
-        p_user_id: user.id,
-        p_limit: limit,
-        p_book_title: bookTitle || null,
-      });
-
-      if (error) {
-        console.error('Error fetching review words:', error);
-        return [];
-      }
-
-      if (!data || data.length === 0) return [];
-
-      return data.map((row: {
-        word_id: string;
-        word: string;
-        stem: string | null;
-        meaning: string | null;
-        etymology: string | null;
-        usage_example: string | null;
-        book_title: string | null;
-        word_created_at: string;
-        word_updated_at: string;
-        progress_id: string | null;
-        stability: number | null;
-        difficulty: number | null;
-        state: string | null;
-        reps: number | null;
-        lapses: number | null;
-        next_review: string | null;
-        last_reviewed: string | null;
-        mastered: boolean | null;
-        progress_created_at: string | null;
-        progress_updated_at: string | null;
-      }) => ({
-        id: row.word_id,
-        user_id: user.id,
-        word: row.word,
-        stem: row.stem,
-        meaning: row.meaning,
-        etymology: row.etymology,
-        usage_example: row.usage_example,
-        book_title: row.book_title,
-        created_at: row.word_created_at,
-        updated_at: row.word_updated_at,
-        progress: row.progress_id
-          ? {
-              id: row.progress_id,
-              user_id: user.id,
-              word_id: row.word_id,
-              stability: row.stability!,
-              difficulty: row.difficulty!,
-              state: row.state as FSRSState,
-              reps: row.reps!,
-              lapses: row.lapses!,
-              next_review: row.next_review!,
-              last_reviewed: row.last_reviewed,
-              mastered: row.mastered!,
-              created_at: row.progress_created_at!,
-              updated_at: row.progress_updated_at!,
-            }
-          : undefined,
-      }));
+      return getReviewWords(user.id, limit, bookTitle);
     },
     [user]
   );
 
-  const recordReview = async (wordId: string, rating: FSRSRating) => {
+  const recordReview = async (wordId: string, rating: FSRSRating, existingProgress?: {
+    id: string;
+    stability: number;
+    difficulty: number;
+    state: FSRSState;
+    reps: number;
+    lapses: number;
+    last_reviewed: string | null;
+  }) => {
     if (!user) throw new Error('Not authenticated');
 
     setReviewing(true);
     try {
-      const { data: existingProgress } = await supabase
-        .from('learning_progress')
-        .select('*')
-        .eq('word_id', wordId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
       const card: FSRSCard = {
         stability: existingProgress?.stability || 1.0,
         difficulty: existingProgress?.difficulty || 5.0,
-        state: (existingProgress?.state as FSRSState) || 'new',
+        state: existingProgress?.state || 'new',
         reps: existingProgress?.reps || 0,
         lapses: existingProgress?.lapses || 0,
         lastReview: existingProgress?.last_reviewed ? new Date(existingProgress.last_reviewed) : null,
@@ -103,34 +41,22 @@ export function useLearning() {
       const result = calculateFSRS(rating, card);
       const mastered = result.state === 'review' && result.reps >= 5 && result.stability >= 30;
 
-      const progressData = {
-        user_id: user.id,
-        word_id: wordId,
-        stability: result.stability,
-        difficulty: result.difficulty,
-        state: result.state,
-        reps: result.reps,
-        lapses: result.lapses,
-        next_review: result.nextReview.toISOString(),
-        last_reviewed: new Date().toISOString(),
-        mastered,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (existingProgress) {
-        const { error } = await supabase
-          .from('learning_progress')
-          .update(progressData)
-          .eq('id', existingProgress.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('learning_progress')
-          .insert(progressData);
-
-        if (error) throw error;
-      }
+      await saveReviewResult(
+        {
+          user_id: user.id,
+          word_id: wordId,
+          stability: result.stability,
+          difficulty: result.difficulty,
+          state: result.state,
+          reps: result.reps,
+          lapses: result.lapses,
+          next_review: result.nextReview.toISOString(),
+          last_reviewed: new Date().toISOString(),
+          mastered,
+          updated_at: new Date().toISOString(),
+        },
+        existingProgress?.id
+      );
     } finally {
       setReviewing(false);
     }
@@ -138,45 +64,7 @@ export function useLearning() {
 
   const getStats = async () => {
     if (!user) return null;
-
-    const { count: totalCount } = await supabase
-      .from('words')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    const { count: masteredCount } = await supabase
-      .from('learning_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('mastered', true);
-
-    const now = new Date().toISOString();
-    const { count: dueCount } = await supabase
-      .from('learning_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .lte('next_review', now)
-      .eq('mastered', false);
-
-    const { count: inProgressCount } = await supabase
-      .from('learning_progress')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    const total = totalCount || 0;
-    const mastered = masteredCount || 0;
-    const hasProgress = inProgressCount || 0;
-    const due = dueCount || 0;
-    const newWords = total - hasProgress;
-    const inProgress = hasProgress - mastered;
-
-    return {
-      total,
-      mastered,
-      inProgress,
-      newWords,
-      dueForReview: due + newWords,
-    };
+    return getLearningStats(user.id);
   };
 
   return {
