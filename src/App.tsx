@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { WordsProvider } from './context/WordsContext';
 import { AuthForm } from './components/AuthForm';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -79,7 +80,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <WordsProvider>
+        <AppContent />
+      </WordsProvider>
     </AuthProvider>
   );
 }
