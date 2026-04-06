@@ -22,9 +22,9 @@ function AppContent() {
   }, []);
 
   const handlePlayPronunciation = useCallback(async (word: string) => {
-    if (!settings) return;
-    await playPronunciation(word, settings);
-  }, [settings]);
+    const accent = settings?.pronunciation_accent || 'american';
+    await playPronunciation(word, accent);
+  }, [settings?.pronunciation_accent]);
 
   const handleSpeechFeedback = useCallback(async (
     word: string,

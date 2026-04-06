@@ -1,5 +1,3 @@
-import type { UserSettings } from '../types';
-
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -36,10 +34,21 @@ export async function fetchMWDefinition(
   }
 }
 
-async function generatePronunciationViaProxy(
+function getLanguageCode(accent: string): string {
+  switch (accent) {
+    case 'british':
+      return 'en-GB';
+    case 'indian':
+      return 'en-IN';
+    default:
+      return 'en-US';
+  }
+}
+
+export async function playPronunciation(
   word: string,
-  accent: string
-): Promise<Blob | null> {
+  accent: 'american' | 'british' | 'indian'
+): Promise<void> {
   try {
     const response = await fetch(
       `${supabaseUrl}/functions/v1/tts-proxy`,
@@ -53,23 +62,29 @@ async function generatePronunciationViaProxy(
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      if (errorData.error === 'TTS not configured') {
-        return null;
-      }
-      console.error('TTS proxy error:', response.status, errorData);
-      return null;
+    if (response.ok) {
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      await audio.play();
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+      return;
     }
 
-    return await response.blob();
+    const errorData = await response.json().catch(() => ({}));
+    if (errorData.error !== 'TTS not configured') {
+      console.error('TTS proxy error:', response.status, errorData);
+    }
   } catch (error) {
     console.error('Failed to generate pronunciation:', error);
-    return null;
   }
+
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = getLanguageCode(accent);
+  speechSynthesis.speak(utterance);
 }
 
-async function getAIFeedbackViaProxy(
+export async function getSpeechFeedback(
   word: string,
   spoken: string,
   mode: 'pronunciation' | 'sentence'
@@ -96,43 +111,4 @@ async function getAIFeedbackViaProxy(
 
   const data = await response.json();
   return data.feedback;
-}
-
-export function getAccentConfig(accent: string): { languageCode: string } {
-  switch (accent) {
-    case 'british':
-      return { languageCode: 'en-GB' };
-    case 'indian':
-      return { languageCode: 'en-IN' };
-    default:
-      return { languageCode: 'en-US' };
-  }
-}
-
-export async function playPronunciation(
-  word: string,
-  settings: UserSettings
-): Promise<void> {
-  const { languageCode } = getAccentConfig(settings.pronunciation_accent);
-
-  const audioBlob = await generatePronunciationViaProxy(word, settings.pronunciation_accent);
-
-  if (audioBlob) {
-    const audioUrl = URL.createObjectURL(audioBlob);
-    const audio = new Audio(audioUrl);
-    await audio.play();
-    audio.onended = () => URL.revokeObjectURL(audioUrl);
-  } else {
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = languageCode;
-    speechSynthesis.speak(utterance);
-  }
-}
-
-export async function getSpeechFeedback(
-  word: string,
-  spoken: string,
-  mode: 'pronunciation' | 'sentence'
-): Promise<string> {
-  return getAIFeedbackViaProxy(word, spoken, mode);
 }
