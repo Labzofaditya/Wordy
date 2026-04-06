@@ -90,7 +90,7 @@ export async function importKindleWords(userId: string, kindleWords: KindleWord[
   }
 
   let imported = 0;
-  const batchSize = 50;
+  const batchSize = 250;
 
   for (let i = 0; i < kindleWords.length; i += batchSize) {
     const batch = kindleWords.slice(i, i + batchSize);
