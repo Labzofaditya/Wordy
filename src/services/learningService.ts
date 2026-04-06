@@ -21,7 +21,6 @@ export async function getReviewWords(
   bookTitle?: string
 ): Promise<WordWithProgress[]> {
   const { data, error } = await supabase.rpc('get_review_words', {
-    p_user_id: userId,
     p_limit: limit,
     p_book_title: bookTitle || null,
   });
