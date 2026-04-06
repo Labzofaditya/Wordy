@@ -113,43 +113,17 @@ export interface LearningStats {
   dueForReview: number;
 }
 
-export async function getLearningStats(userId: string): Promise<LearningStats | null> {
-  const { count: totalCount } = await supabase
-    .from('words')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
+export async function getLearningStats(): Promise<LearningStats | null> {
+  const { data, error } = await supabase.rpc('get_dashboard_stats');
 
-  const { count: masteredCount } = await supabase
-    .from('learning_progress')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('mastered', true);
+  if (error || !data || data.length === 0) return null;
 
-  const now = new Date().toISOString();
-  const { count: dueCount } = await supabase
-    .from('learning_progress')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .lte('next_review', now)
-    .eq('mastered', false);
-
-  const { count: inProgressCount } = await supabase
-    .from('learning_progress')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId);
-
-  const total = totalCount || 0;
-  const mastered = masteredCount || 0;
-  const hasProgress = inProgressCount || 0;
-  const due = dueCount || 0;
-  const newWords = total - hasProgress;
-  const inProgress = hasProgress - mastered;
-
+  const row = data[0];
   return {
-    total,
-    mastered,
-    inProgress,
-    newWords,
-    dueForReview: due + newWords,
+    total: Number(row.total_words),
+    mastered: Number(row.mastered_words),
+    inProgress: Number(row.in_progress_words),
+    newWords: Number(row.new_words),
+    dueForReview: Number(row.due_for_review),
   };
 }

@@ -64,7 +64,7 @@ export function useLearning() {
 
   const getStats = async () => {
     if (!user) return null;
-    return getLearningStats(user.id);
+    return getLearningStats();
   };
 
   return {

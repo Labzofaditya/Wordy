@@ -3,11 +3,6 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { UserSettings } from '../types';
 
-const defaultSettings: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
-  pronunciation_accent: 'american',
-  show_book_title: false,
-};
-
 export function useSettings() {
   const { user } = useAuth();
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -23,26 +18,11 @@ export function useSettings() {
 
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { data, error: rpcError } = await supabase.rpc('get_or_create_settings');
 
-      if (fetchError) throw fetchError;
+      if (rpcError) throw rpcError;
 
-      if (data) {
-        setSettings(data);
-      } else {
-        const { data: newSettings, error: insertError } = await supabase
-          .from('user_settings')
-          .insert({ user_id: user.id, ...defaultSettings })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        setSettings(newSettings);
-      }
+      setSettings(Array.isArray(data) ? data[0] : data);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch settings');

@@ -21,7 +21,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   useEffect(() => {
     getStats().then(setStats);
-  }, [getStats, words]);
+  }, [getStats]);
 
   const progressPercent = stats && stats.total > 0
     ? Math.round((stats.mastered / stats.total) * 100)
