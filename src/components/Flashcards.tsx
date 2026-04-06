@@ -379,9 +379,7 @@ export function Flashcards({ onFetchMeaning, onPlayPronunciation, onSpeechFeedba
                 <>
                   <h3 className="font-semibold text-slate-900 mb-2">Meaning</h3>
                   <div className="text-slate-700 whitespace-pre-line">
-                    {currentWord?.meaning || (settings?.mw_api_key
-                      ? 'Could not fetch definition. The word may not be in the dictionary.'
-                      : 'Add your Merriam-Webster API key in Settings to see definitions.')}
+                    {currentWord?.meaning || 'Could not fetch definition. The word may not be in the dictionary.'}
                   </div>
                   {currentWord?.etymology && (
                     <>

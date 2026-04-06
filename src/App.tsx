@@ -18,14 +18,8 @@ function AppContent() {
   const { currentPage, navigate } = useRouter();
 
   const handleFetchMeaning = useCallback(async (word: string) => {
-    if (!settings?.mw_api_key) {
-      console.log('No MW API key in settings:', { hasSettings: !!settings, key: settings?.mw_api_key?.slice(0, 8) });
-      return null;
-    }
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    return fetchMWDefinition(word, settings.mw_api_key, supabaseUrl, supabaseAnonKey);
-  }, [settings]);
+    return fetchMWDefinition(word);
+  }, []);
 
   const handlePlayPronunciation = useCallback(async (word: string) => {
     if (!settings) return;
@@ -37,9 +31,8 @@ function AppContent() {
     spoken: string,
     mode: 'pronunciation' | 'sentence'
   ) => {
-    if (!settings) throw new Error('Settings not loaded');
-    return getSpeechFeedback(word, spoken, mode, settings);
-  }, [settings]);
+    return getSpeechFeedback(word, spoken, mode);
+  }, []);
 
   if (authLoading) {
     return (

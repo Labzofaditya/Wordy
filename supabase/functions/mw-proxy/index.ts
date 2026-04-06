@@ -45,11 +45,33 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { word, api_key } = await req.json();
-
-    if (!word || !api_key) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: "Missing required parameters: word, api_key" }),
+        JSON.stringify({ error: "Missing Authorization header" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const apiKey = Deno.env.get("MW_API_KEY");
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: "Dictionary service not configured" }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { word } = await req.json();
+
+    if (!word) {
+      return new Response(
+        JSON.stringify({ error: "Missing required parameter: word" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,7 +79,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const mwUrl = `https://dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(word.toLowerCase())}?key=${api_key}`;
+    const mwUrl = `https://dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(word.toLowerCase())}?key=${apiKey}`;
 
     const response = await fetch(mwUrl);
 
