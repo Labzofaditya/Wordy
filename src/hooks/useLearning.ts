@@ -12,79 +12,68 @@ export function useLearning() {
     async (limit: number = 20, bookTitle?: string): Promise<WordWithProgress[]> => {
       if (!user) return [];
 
-      const now = new Date().toISOString();
+      const { data, error } = await supabase.rpc('get_review_words', {
+        p_user_id: user.id,
+        p_limit: limit,
+        p_book_title: bookTitle || null,
+      });
 
-      let wordIdsInBook: Set<string> | null = null;
-      if (bookTitle) {
-        const { data: bookWords } = await supabase
-          .from('words')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('book_title', bookTitle);
-        wordIdsInBook = new Set(bookWords?.map((w) => w.id) || []);
-        if (wordIdsInBook.size === 0) return [];
+      if (error) {
+        console.error('Error fetching review words:', error);
+        return [];
       }
 
-      const { data: progressData } = await supabase
-        .from('learning_progress')
-        .select('word_id')
-        .eq('user_id', user.id)
-        .lte('next_review', now)
-        .eq('mastered', false)
-        .limit(limit * 2);
+      if (!data || data.length === 0) return [];
 
-      let reviewWordIds = progressData?.map((p) => p.word_id) || [];
-      if (wordIdsInBook) {
-        reviewWordIds = reviewWordIds.filter((id) => wordIdsInBook!.has(id));
-      }
-      reviewWordIds = reviewWordIds.slice(0, limit);
-
-      const { data: allProgressWordIds } = await supabase
-        .from('learning_progress')
-        .select('word_id')
-        .eq('user_id', user.id);
-
-      const progressWordIdSet = new Set(allProgressWordIds?.map((p) => p.word_id) || []);
-
-      let wordsQuery = supabase
-        .from('words')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1000);
-
-      if (bookTitle) {
-        wordsQuery = wordsQuery.eq('book_title', bookTitle);
-      }
-
-      const { data: allUserWords } = await wordsQuery;
-
-      const newWordIds = (allUserWords || [])
-        .filter((w) => !progressWordIdSet.has(w.id))
-        .map((w) => w.id)
-        .slice(0, limit - reviewWordIds.length);
-
-      const allWordIds = [...reviewWordIds, ...newWordIds].slice(0, limit);
-
-      if (allWordIds.length === 0) return [];
-
-      const { data: words } = await supabase
-        .from('words')
-        .select('*')
-        .in('id', allWordIds);
-
-      const { data: progress } = await supabase
-        .from('learning_progress')
-        .select('*')
-        .in('word_id', allWordIds);
-
-      const progressMap = new Map();
-      for (const p of progress || []) {
-        progressMap.set(p.word_id, p);
-      }
-
-      return (words || []).map((w) => ({
-        ...w,
-        progress: progressMap.get(w.id),
+      return data.map((row: {
+        word_id: string;
+        word: string;
+        stem: string | null;
+        meaning: string | null;
+        etymology: string | null;
+        usage_example: string | null;
+        book_title: string | null;
+        word_created_at: string;
+        word_updated_at: string;
+        progress_id: string | null;
+        stability: number | null;
+        difficulty: number | null;
+        state: string | null;
+        reps: number | null;
+        lapses: number | null;
+        next_review: string | null;
+        last_reviewed: string | null;
+        mastered: boolean | null;
+        progress_created_at: string | null;
+        progress_updated_at: string | null;
+      }) => ({
+        id: row.word_id,
+        user_id: user.id,
+        word: row.word,
+        stem: row.stem,
+        meaning: row.meaning,
+        etymology: row.etymology,
+        usage_example: row.usage_example,
+        book_title: row.book_title,
+        created_at: row.word_created_at,
+        updated_at: row.word_updated_at,
+        progress: row.progress_id
+          ? {
+              id: row.progress_id,
+              user_id: user.id,
+              word_id: row.word_id,
+              stability: row.stability!,
+              difficulty: row.difficulty!,
+              state: row.state as FSRSState,
+              reps: row.reps!,
+              lapses: row.lapses!,
+              next_review: row.next_review!,
+              last_reviewed: row.last_reviewed,
+              mastered: row.mastered!,
+              created_at: row.progress_created_at!,
+              updated_at: row.progress_updated_at!,
+            }
+          : undefined,
       }));
     },
     [user]
