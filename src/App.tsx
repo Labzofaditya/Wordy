@@ -8,6 +8,7 @@ import { WordLibrary } from './components/WordLibrary';
 import { FileUpload } from './components/FileUpload';
 import { Flashcards } from './components/Flashcards';
 import { Settings } from './components/Settings';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useSettings } from './hooks/useSettings';
 import { useRouter } from './hooks/useRouter';
 import { fetchMWDefinition, playPronunciation, getSpeechFeedback } from './lib/apiService';
@@ -70,20 +71,28 @@ function AppContent() {
     }
   };
 
+  const handleNavigateDashboard = useCallback(() => {
+    navigate('dashboard');
+  }, [navigate]);
+
   return (
     <Layout currentPage={currentPage} onNavigate={navigate}>
-      {renderPage()}
+      <ErrorBoundary fallbackNavigate={handleNavigateDashboard}>
+        {renderPage()}
+      </ErrorBoundary>
     </Layout>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <WordsProvider>
-        <AppContent />
-      </WordsProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <WordsProvider>
+          <AppContent />
+        </WordsProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
