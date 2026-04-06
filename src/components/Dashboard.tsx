@@ -205,7 +205,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                   {word.progress?.mastered ? (
                     <Trophy className="h-4 w-4 text-emerald-500" />
-                  ) : word.progress?.repetitions ? (
+                  ) : word.progress?.reps ? (
                     <Flame className="h-4 w-4 text-amber-500" />
                   ) : null}
                 </div>

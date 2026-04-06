@@ -32,8 +32,8 @@ export function WordLibrary() {
     if (filterBy !== 'all') {
       result = result.filter((w) => {
         if (filterBy === 'mastered') return w.progress?.mastered;
-        if (filterBy === 'learning') return w.progress && !w.progress.mastered && w.progress.repetitions > 0;
-        if (filterBy === 'new') return !w.progress || w.progress.repetitions === 0;
+        if (filterBy === 'learning') return w.progress && !w.progress.mastered && w.progress.reps > 0;
+        if (filterBy === 'new') return !w.progress || w.progress.reps === 0;
         return true;
       });
     }
@@ -45,8 +45,8 @@ export function WordLibrary() {
         case 'alphabetical':
           return a.word.localeCompare(b.word);
         case 'progress':
-          const aReps = a.progress?.repetitions || 0;
-          const bReps = b.progress?.repetitions || 0;
+          const aReps = a.progress?.reps || 0;
+          const bReps = b.progress?.reps || 0;
           return bReps - aReps;
         default:
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -99,7 +99,7 @@ export function WordLibrary() {
         </span>
       );
     }
-    if (word.progress && word.progress.repetitions > 0) {
+    if (word.progress && word.progress.reps > 0) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
           <Clock className="h-3 w-3" />
@@ -117,7 +117,7 @@ export function WordLibrary() {
 
   const stats = useMemo(() => {
     const mastered = words.filter((w) => w.progress?.mastered).length;
-    const learning = words.filter((w) => w.progress && !w.progress.mastered && w.progress.repetitions > 0).length;
+    const learning = words.filter((w) => w.progress && !w.progress.mastered && w.progress.reps > 0).length;
     const newWords = words.length - mastered - learning;
     return { mastered, learning, new: newWords, total: words.length };
   }, [words]);
@@ -271,7 +271,7 @@ export function WordLibrary() {
                     )}
                     {word.progress && (
                       <span>
-                        {word.progress.repetitions} reviews
+                        {word.progress.reps} reviews
                       </span>
                     )}
                   </div>

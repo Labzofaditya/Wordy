@@ -22,7 +22,7 @@ export function calculateStats(words: WordWithProgress[]): VocabStats {
     if (w.progress) {
       if (w.progress.mastered) {
         masteredCount++;
-      } else if (w.progress.repetitions > 0) {
+      } else if (w.progress.reps > 0) {
         learningCount++;
       } else {
         newCount++;
