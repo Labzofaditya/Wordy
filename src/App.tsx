@@ -36,6 +36,10 @@ function AppContent() {
     return getSpeechFeedback(word, spoken, mode);
   }, []);
 
+  const handleNavigateDashboard = useCallback(() => {
+    navigate('dashboard');
+  }, [navigate]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -70,10 +74,6 @@ function AppContent() {
         return <Dashboard onNavigate={navigate} />;
     }
   };
-
-  const handleNavigateDashboard = useCallback(() => {
-    navigate('dashboard');
-  }, [navigate]);
 
   return (
     <Layout currentPage={currentPage} onNavigate={navigate}>
