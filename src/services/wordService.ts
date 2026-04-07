@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { WordWithProgress, LearningProgress, KindleWord, FSRSState } from '../types';
 
-export async function fetchAllWords(userId: string): Promise<WordWithProgress[]> {
+export async function fetchAllWords(): Promise<WordWithProgress[]> {
   const pageSize = 1000;
   const allResults: WordWithProgress[] = [];
   let offset = 0;
@@ -24,7 +24,7 @@ export async function fetchAllWords(userId: string): Promise<WordWithProgress[]>
       const progress: LearningProgress | undefined = row.progress_id
         ? {
             id: row.progress_id,
-            user_id: userId,
+            user_id: row.user_id,
             word_id: row.id,
             stability: row.stability,
             difficulty: row.difficulty,
@@ -61,58 +61,26 @@ export async function fetchAllWords(userId: string): Promise<WordWithProgress[]>
   return allResults;
 }
 
-export async function importKindleWords(userId: string, kindleWords: KindleWord[]): Promise<number> {
-  const uniqueTitles = [
-    ...new Set(
-      kindleWords
-        .map((kw) => kw.book_title?.toLowerCase().trim())
-        .filter((t): t is string => !!t)
-    ),
-  ];
-
-  const bookMap = new Map<string, string>();
-
-  if (uniqueTitles.length > 0) {
-    await supabase
-      .from('books')
-      .upsert(
-        uniqueTitles.map((title) => ({ user_id: userId, title })),
-        { onConflict: 'user_id,title', ignoreDuplicates: true }
-      );
-
-    const { data: books } = await supabase
-      .from('books')
-      .select('id, title')
-      .eq('user_id', userId)
-      .in('title', uniqueTitles);
-
-    books?.forEach((b) => bookMap.set(b.title, b.id));
-  }
-
+export async function importKindleWords(kindleWords: KindleWord[]): Promise<number> {
   let imported = 0;
-  const batchSize = 250;
+  const batchSize = 200;
 
   for (let i = 0; i < kindleWords.length; i += batchSize) {
-    const batch = kindleWords.slice(i, i + batchSize);
-    const wordsToInsert = batch.map((kw) => ({
-      user_id: userId,
+    const batch = kindleWords.slice(i, i + batchSize).map((kw) => ({
       word: kw.word,
-      stem: kw.stem,
-      usage_example: kw.usage,
-      book_id: kw.book_title
-        ? (bookMap.get(kw.book_title.toLowerCase().trim()) ?? null)
-        : null,
+      stem: kw.stem || null,
+      usage_example: kw.usage || null,
+      book_title: kw.book_title || null,
     }));
 
-    const { data, error } = await supabase
-      .from('words')
-      .upsert(wordsToInsert, { onConflict: 'user_id,normalized_word', ignoreDuplicates: true })
-      .select();
+    const { data, error } = await supabase.rpc('import_kindle_batch', {
+      p_words: batch,
+    });
 
     if (error) {
       console.error('Import error:', error);
     } else {
-      imported += data?.length || 0;
+      imported += data || 0;
     }
   }
 

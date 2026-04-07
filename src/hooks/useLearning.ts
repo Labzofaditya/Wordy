@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { calculateFSRS, type FSRSCard } from '../lib/spacedRepetition';
+import { calculateFSRS, isMastered, type FSRSCard } from '../lib/spacedRepetition';
 import { getReviewWords, saveReviewResult, getLearningStats } from '../services/learningService';
 import type { WordWithProgress, FSRSRating, FSRSState } from '../types';
 
@@ -11,7 +11,7 @@ export function useLearning() {
   const getWordsForReview = useCallback(
     async (limit: number = 20, bookTitle?: string): Promise<WordWithProgress[]> => {
       if (!user) return [];
-      return getReviewWords(user.id, limit, bookTitle);
+      return getReviewWords(limit, bookTitle);
     },
     [user]
   );
@@ -39,7 +39,7 @@ export function useLearning() {
       };
 
       const result = calculateFSRS(rating, card);
-      const mastered = result.state === 'review' && result.reps >= 5 && result.stability >= 30;
+      const mastered = isMastered(result.state, result.reps, result.stability);
 
       await saveReviewResult(
         {

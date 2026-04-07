@@ -38,7 +38,7 @@ export function WordsProvider({ children }: { children: ReactNode }) {
 
     try {
       setLoading(true);
-      const wordsWithProgress = await fetchAllWords(user.id);
+      const wordsWithProgress = await fetchAllWords();
       setWords(wordsWithProgress);
       setError(null);
     } catch (err) {
@@ -54,7 +54,7 @@ export function WordsProvider({ children }: { children: ReactNode }) {
 
   const importWords = async (kindleWords: KindleWord[]): Promise<number> => {
     if (!user) throw new Error('Not authenticated');
-    const imported = await importKindleWords(user.id, kindleWords);
+    const imported = await importKindleWords(kindleWords);
     await fetchWords();
     return imported;
   };

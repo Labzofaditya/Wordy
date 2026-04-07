@@ -9,15 +9,16 @@ const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-function getAllowedOrigin(reqOrigin: string | null): string {
+function getAllowedOrigin(reqOrigin: string | null): string | null {
   if (ALLOWED_ORIGINS.length === 0) return "*";
   if (reqOrigin && ALLOWED_ORIGINS.includes(reqOrigin)) return reqOrigin;
-  return ALLOWED_ORIGINS[0];
+  return null;
 }
 
 function buildCorsHeaders(reqOrigin: string | null) {
+  const origin = getAllowedOrigin(reqOrigin);
   return {
-    "Access-Control-Allow-Origin": getAllowedOrigin(reqOrigin),
+    ...(origin ? { "Access-Control-Allow-Origin": origin } : {}),
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
     "Vary": "Origin",

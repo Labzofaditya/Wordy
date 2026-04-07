@@ -16,10 +16,12 @@ export interface ProgressData {
 }
 
 export async function getReviewWords(
-  userId: string,
   limit: number = 20,
   bookTitle?: string
 ): Promise<WordWithProgress[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+
   const { data, error } = await supabase.rpc('get_review_words', {
     p_limit: limit,
     p_book_title: bookTitle || null,

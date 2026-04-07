@@ -150,6 +150,10 @@ export function calculateFSRS(
   };
 }
 
+export function isMastered(state: FSRSState, reps: number, stability: number): boolean {
+  return state === 'review' && reps >= 5 && stability >= 30;
+}
+
 export function getRatingLabel(rating: FSRSRating): string {
   const labels: Record<FSRSRating, string> = {
     1: 'Again',
